@@ -79,10 +79,9 @@ async def failures_time(request: Request):
         json_list = await request.json()
         table_name = json_list["table_name"]
         with engine.begin() as conn:
-            # query = text(
-            #     "SELECT date,time_to_failure ,aircraftsernum_1 FROM aircraft_data;")
-            query = select(class_handler[table_name]).with_only_columns(
-                date=class_handler[table_name].date, time_to_failure=class_handler[table_name].time_to_failure, aircraftsernum_1=class_handler[table_name].aircraftSerNum_1)
+            query = text(
+                "SELECT date,time_to_failure ,aircraftsernum_1 FROM aircraft_data;")
+            # query = select(class_handler[table_name].c.date,class_handler[table_name].c.time_to_failure,class_handler[table_name].c.aircraftSerNum_1)
             result = conn.execute(query)
             data = result.fetchall()
 
@@ -109,12 +108,12 @@ async def cumlative_time(request: Request):
         with engine.begin() as conn:
             # query = text(
             #     "SELECT date,time_to_failure ,aircraftsernum_1 FROM aircraft_data;")
-            query = select(class_handler[table_name]).filter(class_handler[table_name].aircraftsernum_1 == aircraftsernum_1).with_only_columns(
-                cumulative_duration=class_handler[table_name].cumulative_duration).order_by(class_handler[table_name].cumulative_duration.desc()).limit(1)
+            # query = select(class_handler[table_name].c.cumulative_duration).filter(class_handler[table_name].aircraftsernum_1 == aircraftsernum_1).order_by(class_handler[table_name].cumulative_duration.desc()).limit(1)
+            query = text(f"SELECT cumulative_duration FROM aircraft_data WHERE aircraftsernum_1 = {aircraftsernum_1} ORDER BY cumulative_duration DESC LIMIT 1;")
             result = conn.execute(query)
             data = result.fetchall()
 
-        return data[0]
+        return data[0][0]
 
     except Exception as e:
         print(e)
