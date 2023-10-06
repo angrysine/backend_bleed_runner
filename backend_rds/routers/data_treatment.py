@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, UploadFile, Request
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select,text
 from models.treated import class_handler
 from pathlib import Path
 import pandas as pd
@@ -55,13 +55,60 @@ async def get_data(request: Request):
     try:
         json_list = await request.json()
         table_name = json_list["table_name"]
-        with rds.conn.begin():
+        with rds.engine.begin():
             query = select(class_handler[table_name])
             result = rds.conn.execute(query)
             data = result.fetchall()
             df = pd.DataFrame(data)
             df.columns = result.keys()
             return df.to_dict(orient="records")
+    except Exception as e:
+        print(e)
+        return {"message": str(e)}
+    
+
+@router.get("/failures_time", tags=["data"])
+async def failures_time(request: Request):
+    try:
+        json_list = await request.json()
+        table_name = json_list["table_name"]
+        with rds.engine.begin() as conn:
+            query = text(
+                "SELECT date,time_to_failure ,aircraftsernum_1 FROM aircraft_data;")
+            # query = select(class_handler[table_name].c.date,class_handler[table_name].c.time_to_failure,class_handler[table_name].c.aircraftSerNum_1)
+            result = conn.execute(query)
+            data = result.fetchall()
+
+        df = pd.DataFrame(data)
+
+        df["date"] = pd.to_datetime(df["date"])
+        max_values = df.groupby("aircraftsernum_1")['date'].idxmax()
+
+        df2 = df.loc[max_values, ['time_to_failure', "aircraftsernum_1"]]
+        del df, max_values
+        return df2.to_dict(orient="records")
+
+    except Exception as e:
+        print(e)
+        return {"message": str(e)}
+
+
+@router.get("/cumulative_time", tags=["data"])
+async def cumlative_time(request: Request):
+    try:
+        json_list = await request.json()
+        table_name = json_list["table_name"]
+        aircraftsernum_1 = json_list["aircraftsernum_1"]
+        with rds.engine.begin():
+            # query = text(
+            #     "SELECT date,time_to_failure ,aircraftsernum_1 FROM aircraft_data;")
+            # query = select(class_handler[table_name].c.cumulative_duration).filter(class_handler[table_name].aircraftsernum_1 == aircraftsernum_1).order_by(class_handler[table_name].cumulative_duration.desc()).limit(1)
+            query = text(f"SELECT cumulative_duration FROM aircraft_data WHERE aircraftsernum_1 = {aircraftsernum_1} ORDER BY cumulative_duration DESC LIMIT 1;")
+            result = rds.conn.execute(query)
+            data = result.fetchall()
+
+        return data[0][0]
+
     except Exception as e:
         print(e)
         return {"message": str(e)}
