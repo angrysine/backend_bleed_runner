@@ -82,7 +82,7 @@ async def failures_time(request: Request):
             # query = text(
             #     "SELECT date,time_to_failure ,aircraftsernum_1 FROM aircraft_data;")
             query = select(class_handler[table_name]).with_only_columns(
-                [class_handler[table_name].date, class_handler[table_name].time_to_failure, class_handler[table_name].aircraftSerNum_1])
+                date=class_handler[table_name].date, time_to_failure=class_handler[table_name].time_to_failure, aircraftsernum_1=class_handler[table_name].aircraftSerNum_1)
             result = conn.execute(query)
             data = result.fetchall()
 
@@ -110,7 +110,7 @@ async def cumlative_time(request: Request):
             # query = text(
             #     "SELECT date,time_to_failure ,aircraftsernum_1 FROM aircraft_data;")
             query = select(class_handler[table_name]).filter(class_handler[table_name].aircraftsernum_1 == aircraftsernum_1).with_only_columns(
-                [class_handler[table_name].cumulative_duration]).order_by(class_handler[table_name].cumulative_duration.desc()).limit(1)
+                cumulative_duration=class_handler[table_name].cumulative_duration).order_by(class_handler[table_name].cumulative_duration.desc()).limit(1)
             result = conn.execute(query)
             data = result.fetchall()
 
