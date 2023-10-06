@@ -75,7 +75,7 @@ async def failures_time(request: Request):
         with rds.engine.begin() as conn:
             # query = text(
             #     "SELECT date,time_to_failure ,aircraftsernum_1 FROM aircraft_data;")
-            query = select(class_handler[table_name].c.date,class_handler[table_name].c.time_to_failure,class_handler[table_name].c.aircraftSerNum_1)
+            query = select(class_handler[table_name].date,class_handler[table_name].time_to_failure,class_handler[table_name].aircraftSerNum_1)
             result = conn.execute(query)
             data = result.fetchall()
 
@@ -102,7 +102,7 @@ async def cumlative_time(request: Request):
         with rds.engine.begin():
             # query = text(
             #     "SELECT date,time_to_failure ,aircraftsernum_1 FROM aircraft_data;")
-            query = select(class_handler[table_name].c.cumulative_duration).filter(class_handler[table_name].aircraftsernum_1 == aircraftsernum_1).order_by(class_handler[table_name].cumulative_duration.desc()).limit(1)
+            query = select(class_handler[table_name].cumulative_duration).filter(class_handler[table_name].aircraftsernum_1 == aircraftsernum_1).order_by(class_handler[table_name].cumulative_duration.desc()).limit(1)
             #query = text(f"SELECT cumulative_duration FROM aircraft_data WHERE aircraftsernum_1 = {aircraftsernum_1} ORDER BY cumulative_duration DESC LIMIT 1;")
             result = rds.conn.execute(query)
             data = result.fetchall()
